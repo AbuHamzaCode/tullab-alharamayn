@@ -1,0 +1,4 @@
+2023-09-05T18:29:55.918Z [ERROR]: [object Object]
+2023-09-05T18:30:59.153Z [ERROR]: {"errors":[{"type":"field","value":"test@gmail.com","msg":"User does not exist.","path":"username","location":"body"}]}
+2023-09-05T18:32:32.131Z [ERROR]: {"errors":[{"type":"field","value":"test@gmail.com","msg":"User does not exist.","path":"username","location":"body"}]}
+2023-09-05T18:34:22.444Z [ERROR]: {"errors":[{"type":"field","value":"test1","msg":"User does not exist.","path":"username","location":"body"}]}
