@@ -6,10 +6,10 @@ const models = require('../models'); // Import your Sequelize models
 const { Op } = require('sequelize');
 const logger = require('../log');
 
-/** NEXT IMPLEMENT THINGS ->
+/** -------------NEXT IMPLEMENT THINGS ->
  *  BCRYPT (HASHING & VERIFYING) PASSWORD ->
  *  HASHING AFTER SUCCESS SIGNUP ->
- *  VERIFYING WHEN LOGIN
+ *  VERIFYING WHEN LOGIN --------------
  */
 
 // Handle the login user
