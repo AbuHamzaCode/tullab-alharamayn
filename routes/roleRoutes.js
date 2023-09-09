@@ -2,9 +2,13 @@ const express = require('express');
 const router = express.Router();
 const models = require('../models'); // Import your Sequelize models
 const logger = require('../log');
+var { expressjwt: jwt } = require("express-jwt");
+
+/** Middleware which one checking token */
+const authenticateJWT = jwt({ secret: process.env.SECRET_KEY, algorithms: ['HS256'] });
 
 // GET all roles
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const roles = await models.Role.findAll(); // Include related models if needed
     logger.info('This is an informational log.', roles);
@@ -17,7 +21,7 @@ router.get('/', async (req, res) => {
 });
 
 // get role by id
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const roleId = req.params.id;
     const role = await models.Role.findByPk(roleId, {
@@ -45,7 +49,7 @@ router.get('/:id', async (req, res) => {
 
 
 // POST a new user
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     //add needed logic
   } catch (error) {

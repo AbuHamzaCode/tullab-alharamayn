@@ -1,17 +1,19 @@
 const express = require('express');
+var { expressjwt: jwt } = require("express-jwt");
 const router = express.Router();
 const models = require('../models'); // Import your Sequelize models
 const logger = require('../log');
 
+/** Middleware which one checking token */
+const authenticateJWT = jwt({ secret: process.env.SECRET_KEY, algorithms: ['HS256'] });
+
 // GET all users
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const users = await models.User.findAll(); // Include related models if needed
-    logger.info('This is an informational log.', users);
     res.json(users);
   } catch (error) {
     logger.error('An error occurred:', error);
-
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
@@ -22,7 +24,7 @@ router.get('/', async (req, res) => {
 */
 
 // GET  user by id
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const userId = req.params.id;
     const user = await models.User.findByPk(userId, {
@@ -49,7 +51,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST a new user
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     const newUser = req.body;
     console.log('newUser', newUser)

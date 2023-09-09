@@ -1,5 +1,5 @@
 const { body } = require('express-validator');
-const models = require('./models'); // Import your Sequelize models
+const models = require('../models');
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 
@@ -23,7 +23,7 @@ const validateLogin = [
                 },
             });
             if (!existingUser) {
-                throw new Error('User does not exist.');
+                throw new Error('Incorrect username or password.');
             }
 
             req.user = existingUser;
@@ -34,7 +34,7 @@ const validateLogin = [
         .custom(async (value, { req }) => {
 
             if (!req.user) {
-                throw new Error('User does not exist.');
+                throw new Error('Incorrect username or password.');
             }
 
             const passwordMatch = await bcrypt.compare(value, req.user.password);

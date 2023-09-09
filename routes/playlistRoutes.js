@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const models = require('../models'); // Import your Sequelize models
 const logger = require('../log');
+var { expressjwt: jwt } = require("express-jwt");
+
+/** Middleware which one checking token */
+const authenticateJWT = jwt({ secret: process.env.SECRET_KEY, algorithms: ['HS256'] });
 
 // GET all playlists
 router.get('/', async (req, res) => {

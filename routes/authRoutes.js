@@ -4,8 +4,9 @@ const router = express.Router();
 const { validationResult } = require('express-validator');
 const models = require('../models'); // Import your Sequelize models
 const logger = require('../log');
-const { validateLogin, validateSignup } = require('../validators');
+const { validateLogin, validateSignup } = require('../middleware/auth.middleware');
 const bcrypt = require('bcrypt');
+const jsonWebToken = require('jsonwebtoken');
 
 // Handle the login user
 router.post('/login', validateLogin, async (req, res) => {
@@ -18,7 +19,14 @@ router.post('/login', validateLogin, async (req, res) => {
   try {
     req.session.isAuthenticated = true;
     req.session.username = username;
-    return res.json({ status: 'success', username: username });
+    const user = { id: req.user.id, username: username, email: req.user.email };
+    const token = jsonWebToken.sign(user, process.env.SECRET_KEY, { expiresIn: '20h' });
+
+    if (!token) {
+      return res.status(401).json({ message: 'Authentication Failed!' })
+    }
+
+    return res.json({ status: 'success', token: token });
   } catch (error) {
     logger.error(JSON.stringify(error));
     res.status(500).json({ message: 'Internal Server Error' });
