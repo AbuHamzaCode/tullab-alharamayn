@@ -1,17 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const models = require('../models'); // Import your Sequelize models
-const logger = require('../log');
-var { expressjwt: jwt } = require("express-jwt");
+const { validationResult } = require('express-validator');
+const models = require('../models');
+const logger = require('../log.config');
+const { authenticateJWT, isTokenExpired } = require('../middleware/token.middleware');
+const { validateRoleCreate } = require('../middleware/role.middleware');
 
-/** Middleware which one checking token */
-const authenticateJWT = jwt({ secret: process.env.SECRET_KEY, algorithms: ['HS256'] });
 
 // GET all roles
-router.get('/', authenticateJWT, async (req, res) => {
+router.get('/', authenticateJWT, isTokenExpired, async (req, res) => {
   try {
-    const roles = await models.Role.findAll(); // Include related models if needed
-    logger.info('This is an informational log.', roles);
+    const roles = await models.Role.findAll();
     res.json(roles);
   } catch (error) {
     logger.error('An error occurred:', error);
@@ -21,7 +20,7 @@ router.get('/', authenticateJWT, async (req, res) => {
 });
 
 // get role by id
-router.get('/:id', authenticateJWT, async (req, res) => {
+router.get('/:id', authenticateJWT, isTokenExpired, async (req, res) => {
   try {
     const roleId = req.params.id;
     const role = await models.Role.findByPk(roleId, {
@@ -48,12 +47,22 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 });
 
 
-// POST a new user
-router.post('/', authenticateJWT, async (req, res) => {
+// POST a new role
+router.post('/create', authenticateJWT, isTokenExpired, validateRoleCreate, async (req, res) => {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    logger.error(JSON.stringify(errors));
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    //add needed logic
+    const newRole = req.body;
+    const createdRole = await models.Role.create(newRole);
+    res.status(201).json(createdRole);
   } catch (error) {
-    //add needed error catching logic
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 

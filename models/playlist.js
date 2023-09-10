@@ -19,10 +19,6 @@ module.exports = sequelize => {
       validate: {
         len: [1, 250] // Text length between 0 and 250 characters
       }
-    },
-    tags: {
-      type: DataTypes.STRING,
-      allowNull: true,
     }
   }, {
     tableName: 'playlist',
@@ -31,6 +27,7 @@ module.exports = sequelize => {
   
   Playlist.associate = models => {
     Playlist.hasMany(models.Lesson, { foreignKey: 'playlistId' }); // Playlist has many Lessons
+    Playlist.belongsToMany(models.Tag, { through: 'PlaylistTags', foreignKey: 'playlistId' }); // Playlist belongs to many Tags
   };
 
   // Add a custom toJSON method to convert table name keys to lowercase

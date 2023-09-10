@@ -1,22 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const models = require('../models'); // Import your Sequelize models
-const logger = require('../log');
-var { expressjwt: jwt } = require("express-jwt");
+const logger = require('../log.config');
+const { authenticateJWT, isTokenExpired } = require('../middleware/token.middleware');
+const { validatePlaylistCreate } = require('../middleware/playlist.middleware');
 
-/** Middleware which one checking token */
-const authenticateJWT = jwt({ secret: process.env.SECRET_KEY, algorithms: ['HS256'] });
 
 // GET all playlists
 router.get('/', async (req, res) => {
   try {
-    const playlists = await models.Playlist.findAll(); // Include related models if needed
-    logger.info('This is an informational log.', playlists);
+    const playlists = await models.Playlist.findAll();
     res.json(playlists);
   } catch (error) {
-    // Example of using the logger
     logger.error('An error occurred:', error);
-
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
@@ -39,11 +35,21 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST a new playlist
-router.post('/', async (req, res) => {
+router.post('/create', authenticateJWT, isTokenExpired, validatePlaylistCreate, async (req, res) => {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    logger.error(JSON.stringify(errors));
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
-    //add needed logic
+    const newPlaylist = req.body;
+    const createdPlaylist = await models.Playlist.create(newPlaylist);
+    res.status(201).json(createdPlaylist);
   } catch (error) {
-    //add needed error catching logic
+    console.error(error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 

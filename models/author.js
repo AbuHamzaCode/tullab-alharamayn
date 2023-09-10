@@ -26,10 +26,6 @@ module.exports = sequelize => {
       validate: {
         len: [0, 250]
       }
-    },
-    tags: {
-      type: DataTypes.JSON,
-      allowNull: true,
     }
   }, {
     tableName: 'author',
@@ -38,6 +34,7 @@ module.exports = sequelize => {
 
   Author.associate = models => {
     Author.belongsToMany(models.Lesson, { through: 'AuthorLesson', foreignKey: 'authorId' }); // Author belongs to many Lessons
+    Author.belongsToMany(models.Tag, { through: 'AuthorTags', foreignKey: 'authorId' }); // Author belongs to many Tags
   };
 
   // Add a custom toJSON method to convert table name keys to lowercase

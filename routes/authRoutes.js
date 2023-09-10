@@ -3,10 +3,11 @@ const express = require('express');
 const router = express.Router();
 const { validationResult } = require('express-validator');
 const models = require('../models'); // Import your Sequelize models
-const logger = require('../log');
+const logger = require('../log.config');
 const { validateLogin, validateSignup } = require('../middleware/auth.middleware');
 const bcrypt = require('bcrypt');
 const jsonWebToken = require('jsonwebtoken');
+const { authenticateJWT, isTokenExpired, expiredTokens } = require('../middleware/token.middleware');
 
 // Handle the login user
 router.post('/login', validateLogin, async (req, res) => {
@@ -17,8 +18,6 @@ router.post('/login', validateLogin, async (req, res) => {
   }
   const { username, password } = req.body;
   try {
-    req.session.isAuthenticated = true;
-    req.session.username = username;
     const user = { id: req.user.id, username: username, email: req.user.email };
     const token = jsonWebToken.sign(user, process.env.SECRET_KEY, { expiresIn: '20h' });
 
@@ -60,13 +59,12 @@ router.post('/signup', validateSignup, async (req, res) => {
 });
 
 // Define a logout route
-router.get('/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      logger.error(JSON.stringify(err));
-    }
-    res.status(200).json({ status: 'success', })
-  });
+router.get('/logout', authenticateJWT, isTokenExpired, (req, res) => {
+
+  const token = req.headers.authorization;
+  expiredTokens.push(token);
+
+  res.status(200).json({ status: 'success' })
 });
 
 module.exports = router;

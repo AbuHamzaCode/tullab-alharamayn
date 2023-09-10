@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const models = require('../models'); // Import your Sequelize models
-const logger = require('../log');
+const models = require('../models'); 
+const logger = require('../log.config');
 
-// GET all users
+// GET all author
 router.get('/', async (req, res) => {
   try {
-    const authors = await models.Author.findAll(); // Include related models if needed
+    const authors = await models.Author.findAll(); 
     logger.info('This is an informational log.', authors);
     res.json(authors);
   } catch (error) {
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST a new user
+// POST a new author
 router.post('/', async (req, res) => {
   try {
     //add needed logic
@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-
+// GET author by id
 router.get('/:id', async (req, res) => {
   try {
     const authorId = req.params.id;

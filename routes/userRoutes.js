@@ -1,14 +1,11 @@
 const express = require('express');
-var { expressjwt: jwt } = require("express-jwt");
 const router = express.Router();
 const models = require('../models'); // Import your Sequelize models
-const logger = require('../log');
-
-/** Middleware which one checking token */
-const authenticateJWT = jwt({ secret: process.env.SECRET_KEY, algorithms: ['HS256'] });
+const logger = require('../log.config');
+const { authenticateJWT, isTokenExpired } = require('../middleware/token.middleware');
 
 // GET all users
-router.get('/', authenticateJWT, async (req, res) => {
+router.get('/', authenticateJWT, isTokenExpired, async (req, res) => {
   try {
     const users = await models.User.findAll(); // Include related models if needed
     res.json(users);
@@ -24,7 +21,7 @@ router.get('/', authenticateJWT, async (req, res) => {
 */
 
 // GET  user by id
-router.get('/:id', authenticateJWT, async (req, res) => {
+router.get('/:id', authenticateJWT, isTokenExpired, async (req, res) => {
   try {
     const userId = req.params.id;
     const user = await models.User.findByPk(userId, {
@@ -41,7 +38,6 @@ router.get('/:id', authenticateJWT, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     // const roles = await user.getRoles(); // Using 'getRoles' to handle the association
     res.json(user);
   } catch (error) {
@@ -51,10 +47,10 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 });
 
 // POST a new user
-router.post('/', authenticateJWT, async (req, res) => {
+router.post('/create', authenticateJWT, isTokenExpired, async (req, res) => {
   try {
     const newUser = req.body;
-    console.log('newUser', newUser)
+    delete newUser.password;
     const createdUser = await models.User.create(newUser);
     res.status(201).json(createdUser);
   } catch (error) {
