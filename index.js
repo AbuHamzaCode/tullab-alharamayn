@@ -1,16 +1,23 @@
-const express = require('express');
 const bodyParser = require('body-parser');
+const express = require('express');
 const cors = require('cors');
 const models = require('./models');
 require('dotenv').config({ path: '.env' });
-
 const app = express();
-const port = process.env.APP_PORT;
-
-app.use(cors());
 
 // Middleware
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.json())
+
+const port = process.env.APP_PORT;
+
+const corsOptions = {
+  origin: 'http://localhost:3000', // Specify the allowed origin(s)
+  // methods: 'GET,PUT,POST,DELETE', // Specify which HTTP methods are allowed
+  // credentials: true, // Include cookies when sending the request (for sessions)
+};
+
+app.use(cors(corsOptions));
 
 // Define API routes 
 app.use('/api/users', require('./routes/userRoutes'));

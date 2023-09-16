@@ -2,18 +2,6 @@ const { body } = require('express-validator');
 const models = require('../models');
 const { Op } = require('sequelize');
 const bcrypt = require('bcrypt');
-const multer = require('multer');
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'thumbnails/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname); // Rename files to avoid overwriting
-    },
-});
-
-const upload = multer({ storage: storage, limits: { fileSize: 5 * 1024 * 1024 }, });
 
 const validateLogin = [
     body('username')
@@ -79,28 +67,8 @@ const validateSignup = [
     body('fullName')
         .notEmpty().withMessage('Full Name is required.')
         .isLength({ min: 1, max: 100 }).withMessage('Full Name must be between 1 and 100 characters.'),
-    upload.single('thumbnail'),
-    body('thumbnail')
-        .custom((value, { req }) => {
-            if (!req.file) {
-                return true;
-            }
-
-            // Check the file size (e.g., limit to 5MB)
-            const maxSizeBytes = 5 * 1024 * 1024;
-            if (req.file.size > maxSizeBytes) {
-                throw new Error('File size exceeds the limit (5MB)');
-            }
-
-            // Check the file type (e.g., allow only images)
-            const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/svg'];
-            if (!allowedMimeTypes.includes(req.file.mimetype)) {
-                throw new Error('Invalid file type');
-            }
-
-            return true; // Validation passed
-        }),
 ];
+
 
 module.exports = {
     validateLogin,

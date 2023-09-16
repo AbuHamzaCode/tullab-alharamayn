@@ -8,6 +8,7 @@ const { validateLogin, validateSignup } = require('../middleware/auth.middleware
 const bcrypt = require('bcrypt');
 const jsonWebToken = require('jsonwebtoken');
 const { authenticateJWT, isTokenExpired, expiredTokens } = require('../middleware/token.middleware');
+const { formDataHandler } = require('../utils/helpers');
 
 // Handle the login user
 router.post('/login', validateLogin, async (req, res) => {
@@ -33,7 +34,7 @@ router.post('/login', validateLogin, async (req, res) => {
 });
 
 // Handle the signup user
-router.post('/signup', validateSignup, async (req, res) => {
+router.post('/signup', formDataHandler, validateSignup, async (req, res) => {
 
   /** if validator given error, throw 400 status code with messages */
   const errors = validationResult(req);
@@ -41,7 +42,7 @@ router.post('/signup', validateSignup, async (req, res) => {
     logger.error(JSON.stringify(errors));
     return res.status(400).json({ errors: errors.array() });
   }
-
+  
   /** Hashing password */
   let newUser = req.body;
   const hashedPassword = await bcrypt.hash(newUser.password, 10);

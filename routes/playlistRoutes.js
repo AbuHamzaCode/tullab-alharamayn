@@ -45,6 +45,10 @@ router.post('/create', authenticateJWT, isTokenExpired, validatePlaylistCreate, 
 
   try {
     const newPlaylist = req.body;
+    if (req.file) {
+      newPlaylist.thumbnail = req.file.path;
+    }
+    console.log('playlist', newPlaylist) /** CHECK HERE TEST TEST TEST  TEST TEST******* */
     const createdPlaylist = await models.Playlist.create(newPlaylist);
     res.status(201).json(createdPlaylist);
   } catch (error) {
