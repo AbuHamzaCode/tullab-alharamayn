@@ -6,7 +6,7 @@ require('dotenv').config({ path: '.env' });
 const app = express();
 
 // Middleware
-app.use(bodyParser.urlencoded());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json())
 
 const port = process.env.APP_PORT;

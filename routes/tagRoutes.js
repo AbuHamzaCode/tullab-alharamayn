@@ -38,9 +38,9 @@ router.post('/create', authenticateJWT, isTokenExpired, validateTagCreate, async
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        logger.error(JSON.stringify(errors));
-        return res.status(400).json({ errors: errors.array() });
-    }
+        let errorList = errors.array().map(val => ({ [val.path]: val.msg }))
+        return res.status(400).json({ errors: errorList });
+      }
 
     try {
         const newTag = req.body;

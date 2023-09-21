@@ -11,22 +11,23 @@ const { authenticateJWT, isTokenExpired, expiredTokens } = require('../middlewar
 const { formDataHandler } = require('../utils/helpers');
 
 // Handle the login user
-router.post('/login', validateLogin, async (req, res) => {
+router.post('/login', formDataHandler, validateLogin, async (req, res) => {
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    logger.error(JSON.stringify(errors));
-    return res.status(400).json({ errors: errors.array() });
+    let errorList = errors.array().map(val => ({ [val.path]: val.msg }))
+    return res.status(400).json({ errors: errorList });
   }
-  const { username, password } = req.body;
-  try {
-    const user = { id: req.user.id, username: username, email: req.user.email };
-    const token = jsonWebToken.sign(user, process.env.SECRET_KEY, { expiresIn: '20h' });
 
+  try {
+    let sanitizedUser = { ...req.user.toJSON() };
+    delete sanitizedUser.password;
+    const token = jsonWebToken.sign(sanitizedUser, process.env.SECRET_KEY, { expiresIn: '20h' });
     if (!token) {
       return res.status(401).json({ message: 'Authentication Failed!' })
     }
-
-    return res.json({ status: 'success', token: token });
+    sanitizedUser = { ...sanitizedUser, token: token };
+    return res.json({ status: 'success', user: sanitizedUser });
   } catch (error) {
     logger.error(JSON.stringify(error));
     res.status(500).json({ message: 'Internal Server Error' });
@@ -39,10 +40,10 @@ router.post('/signup', formDataHandler, validateSignup, async (req, res) => {
   /** if validator given error, throw 400 status code with messages */
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    logger.error(JSON.stringify(errors));
-    return res.status(400).json({ errors: errors.array() });
+    let errorList = errors.array().map(val => ({ [val.path]: val.msg }))
+    return res.status(400).json({ errors: errorList });
   }
-  
+
   /** Hashing password */
   let newUser = req.body;
   const hashedPassword = await bcrypt.hash(newUser.password, 10);
@@ -51,7 +52,10 @@ router.post('/signup', formDataHandler, validateSignup, async (req, res) => {
   /** Save user */
   try {
     const createdUser = await models.User.create(newUser);
-    res.status(201).json({ status: "success", username: createdUser.username });
+    const sanitizedUser = { ...createdUser.toJSON() };
+    delete sanitizedUser.password;
+
+    res.status(201).json({ status: "success", user: sanitizedUser });
   } catch (error) {
     logger.error(JSON.stringify(error));
     res.status(500).json({ message: 'Internal Server Error' });

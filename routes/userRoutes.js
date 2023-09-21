@@ -7,7 +7,7 @@ const { authenticateJWT, isTokenExpired } = require('../middleware/token.middlew
 // GET all users
 router.get('/', authenticateJWT, isTokenExpired, async (req, res) => {
   try {
-    const users = await models.User.findAll(); // Include related models if needed
+    const users = await models.User.findAll({ attributes: { exclude: ['password'] } }); // Include related models if needed
     res.json(users);
   } catch (error) {
     logger.error('An error occurred:', error);
@@ -33,6 +33,7 @@ router.get('/:id', authenticateJWT, isTokenExpired, async (req, res) => {
           },
         },
       ],
+      attributes: { exclude: ['password'] }
     });
 
     if (!user) {
