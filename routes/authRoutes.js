@@ -27,7 +27,7 @@ router.post('/login', formDataHandler, validateLogin, async (req, res) => {
       return res.status(401).json({ message: 'Authentication Failed!' })
     }
     sanitizedUser = { ...sanitizedUser, token: token };
-    return res.json({ status: 'success', user: sanitizedUser });
+    return res.json({ status: 'success', message: "Successfully logged in.", user: sanitizedUser });
   } catch (error) {
     logger.error(JSON.stringify(error));
     res.status(500).json({ message: 'Internal Server Error' });
