@@ -5,10 +5,15 @@ const logger = require('../log.config');
 const multer = require('multer');
 const { assembleFile } = require('../utils/helpers');
 
-// Define a storage engine for multer to handle file uploads
-const storage = multer.memoryStorage(); // This stores files in memory
-const upload = multer({ storage });
-const uploadedChunks = []; // Store received chunks temporarily
+const upload = multer({
+  storage: multer.memoryStorage(), // You can change the storage as needed
+  limits: {
+    fieldSize: 1024 * 1024 * 1024, // Increase field size limit (1 GB in this example)
+    fileSize: 1024 * 1024 * 1024, // Increase file size limit (1 GB in this example)
+  },
+});
+let uploadedChunks = []; // Store received chunks temporarily
+let originalFilename;
 
 // GET all lesson
 router.get('/', async (req, res) => {
@@ -60,7 +65,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/audio-upload', upload.single('chunk'), (req, res) => {
+router.post('/file-upload', upload.single('chunk'), async (req, res) => {
   const { chunk, chunkNumber, totalChunks, filename } = req.body;
 
   // Store the received chunk
@@ -68,15 +73,18 @@ router.post('/audio-upload', upload.single('chunk'), (req, res) => {
 
   console.log(`Received chunk ${chunkNumber} of ${totalChunks}`);
 
+
   // Store the original filename if not already set
   if (!originalFilename) {
     originalFilename = filename;
   }
 
+  console.log(`uploadedChunks length: ${uploadedChunks.length}, totalChunks: ${totalChunks}`);
   // Check if all chunks have been received
-  if (uploadedChunks.length === totalChunks) {
+  if (uploadedChunks.length === parseInt(totalChunks)) {
+    console.log("All chunks received, total chunks:", totalChunks);
     // Assemble the file and save it to a permanent location
-    assembleFile(uploadedChunks, originalFilename);
+    await assembleFile(uploadedChunks, originalFilename);
 
     /** SAVE INTO DATABASE FILE URL */
     

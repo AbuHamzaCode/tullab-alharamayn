@@ -12,8 +12,9 @@ async function assembleFile(chunks, originalFilePath) {
     // Concatenate the chunks
     const concatenatedBuffer = Buffer.concat(chunks.map(chunk => Buffer.from(chunk.chunk, 'base64')));
 
+    console.log(`chunks length: ${chunks.length}, pathname: ${originalFilePath}, concatenatedBuffer length: ${concatenatedBuffer.length}`);
     // Write the concatenated buffer to the original file
-    await fsPromises.writeFile(originalFilePath, concatenatedBuffer);
+    await fsPromises.writeFile(`audios/${originalFilePath}`, concatenatedBuffer);
 
     console.log('File assembled successfully');
   } catch (error) {
@@ -43,6 +44,7 @@ async function isAlreadyHasEmailOrUsername(value, res) {
   }
   return false;
 }
+
 /** form-data handler =>
  *  put the data into raw json processing the thumbnail
  */
@@ -106,5 +108,4 @@ module.exports = {
   isAlreadyHasEmailOrUsername,
   formDataHandler,
   fileUpload
-
 };

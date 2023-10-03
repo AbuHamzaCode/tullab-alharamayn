@@ -32,7 +32,7 @@ module.exports = sequelize => {
     isAdmin: {
       type: DataTypes.BOOLEAN,
       allowNull: true,
-      defaultValue: false // Default value for isAdmin
+      defaultValue: true // Default value for isAdmin
     },
     thumbnail: {
       type: DataTypes.BLOB('long'), // Binary data (e.g., for images)
