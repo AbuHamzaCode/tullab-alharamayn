@@ -4,23 +4,25 @@ const models = require('../models');
 const { Op } = require('sequelize');
 const formidable = require('formidable');
 
-async function assembleFile(chunks, originalFilePath) {
-  try {
-    // Sort chunks by chunk number
-    chunks.sort((a, b) => a.chunkNumber - b.chunkNumber);
+const mergeChunks = async (fileName, totalChunks) => {
+  const chunkDir = "chunks";
+  const mergedFilePath = "audios";
 
-    // Concatenate the chunks
-    const concatenatedBuffer = Buffer.concat(chunks.map(chunk => Buffer.from(chunk.chunk, 'base64')));
-
-    console.log(`chunks length: ${chunks.length}, pathname: ${originalFilePath}, concatenatedBuffer length: ${concatenatedBuffer.length}`);
-    // Write the concatenated buffer to the original file
-    await fsPromises.writeFile(`audios/${originalFilePath}`, concatenatedBuffer);
-
-    console.log('File assembled successfully');
-  } catch (error) {
-    console.error('Error assembling file:', error);
+  if (!fs.existsSync(mergedFilePath)) {
+    fs.mkdirSync(mergedFilePath);
   }
-}
+
+  const writeStream = fs.createWriteStream(`${mergedFilePath}/${fileName}`);
+  for (let i = 0; i < totalChunks; i++) {
+    const chunkFilePath = `${chunkDir}/${fileName}.part_${i}`;
+    const chunkBuffer = await fs.promises.readFile(chunkFilePath);
+    writeStream.write(chunkBuffer);
+    fs.unlinkSync(chunkFilePath); // Delete the individual chunk file after merging
+  }
+
+  writeStream.end();
+  console.log("Chunks merged successfully");
+};
 
 async function isAlreadyHasEmailOrUsername(value, res) {
 
@@ -104,7 +106,7 @@ function fileUpload(thumbnail) {
 }
 
 module.exports = {
-  assembleFile,
+  mergeChunks,
   isAlreadyHasEmailOrUsername,
   formDataHandler,
   fileUpload

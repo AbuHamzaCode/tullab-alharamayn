@@ -3,7 +3,8 @@ const router = express.Router();
 const models = require('../models');
 const logger = require('../log.config');
 const multer = require('multer');
-const { assembleFile } = require('../utils/helpers');
+const fs = require("fs");
+const { mergeChunks } = require('../utils/helpers');
 
 const upload = multer({
   storage: multer.memoryStorage(), // You can change the storage as needed
@@ -12,8 +13,6 @@ const upload = multer({
     fileSize: 1024 * 1024 * 1024, // Increase file size limit (1 GB in this example)
   },
 });
-let uploadedChunks = []; // Store received chunks temporarily
-let originalFilename;
 
 // GET all lesson
 router.get('/', async (req, res) => {
@@ -65,34 +64,34 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/file-upload', upload.single('chunk'), async (req, res) => {
-  const { chunk, chunkNumber, totalChunks, filename } = req.body;
+router.post("/file-upload", upload.single("file"), async (req, res) => {
+  const chunk = req.file.buffer;
+  const chunkNumber = Number(req.body.chunkNumber);
+  const totalChunks = Number(req.body.totalChunks);
+  const fileName = req.body.originalname;
 
-  // Store the received chunk
-  uploadedChunks[chunkNumber - 1] = { chunk, chunkNumber };
+  const chunkDir = "chunks"; // Directory to save chunks
 
-  console.log(`Received chunk ${chunkNumber} of ${totalChunks}`);
-
-
-  // Store the original filename if not already set
-  if (!originalFilename) {
-    originalFilename = filename;
+  if (!fs.existsSync(chunkDir)) {
+    fs.mkdirSync(chunkDir);
   }
 
-  console.log(`uploadedChunks length: ${uploadedChunks.length}, totalChunks: ${totalChunks}`);
-  // Check if all chunks have been received
-  if (uploadedChunks.length === parseInt(totalChunks)) {
-    console.log("All chunks received, total chunks:", totalChunks);
-    // Assemble the file and save it to a permanent location
-    await assembleFile(uploadedChunks, originalFilename);
+  const chunkFilePath = `${chunkDir}/${fileName}.part_${chunkNumber}`;
 
-    /** SAVE INTO DATABASE FILE URL */
-    
-    // Send a success response
-    res.status(200).json({ message: 'File uploaded successfully' });
-  } else {
-    // Send a success response for the chunk received
-    res.status(200).json({ message: `Chunk ${chunkNumber} received successfully` });
+  try {
+    await fs.promises.writeFile(chunkFilePath, chunk);
+    console.log(`Chunk ${chunkNumber}/${totalChunks} saved`);
+
+    if (chunkNumber === totalChunks - 1) {
+      // If this is the last chunk, merge all chunks into a single file
+      await mergeChunks(fileName, totalChunks);
+      console.log("File merged successfully");
+    }
+
+    res.status(200).json({ message: "Chunk uploaded successfully" });
+  } catch (error) {
+    console.error("Error saving chunk:", error);
+    res.status(500).json({ error: "Error saving chunk" });
   }
 });
 
