@@ -4,9 +4,14 @@ const models = require('../models');
 const { Op } = require('sequelize');
 const formidable = require('formidable');
 
+/**
+ * Merging all chunks into file
+ * @param {String} fileName - name of file 
+ * @param {Number} totalChunks - total recieved chunks
+ */
 const mergeChunks = async (fileName, totalChunks) => {
   const chunkDir = "chunks";
-  const mergedFilePath = "audios";
+  const mergedFilePath = "uploaded_audios";
 
   if (!fs.existsSync(mergedFilePath)) {
     fs.mkdirSync(mergedFilePath);
@@ -21,7 +26,8 @@ const mergeChunks = async (fileName, totalChunks) => {
   }
 
   writeStream.end();
-  console.log("Chunks merged successfully");
+  const mergedFileURL = `http://localhost:8080/${mergedFilePath}/${fileName}`;
+  return mergedFileURL;
 };
 
 async function isAlreadyHasEmailOrUsername(value, res) {
@@ -47,8 +53,12 @@ async function isAlreadyHasEmailOrUsername(value, res) {
   return false;
 }
 
-/** form-data handler =>
- *  put the data into raw json processing the thumbnail
+/**
+ * Form-data handler, saving the thumbnail if has.
+ * Puting into request body for checking on the next step.
+ * @param {Request} req - was came request
+ * @param {Response} res - response
+ * @param {Function} next - Thread moving the next process
  */
 const formDataHandler = async (req, res, next) => {
   const form = new formidable.IncomingForm();
@@ -100,7 +110,7 @@ function fileUpload(thumbnail) {
   }
 
   // Handle the file
-  const filePath = `thumbnails/${thumbnail.originalFilename}`;
+  const filePath = `uploaded_thumbnails/${thumbnail.originalFilename}`;
   fs.renameSync(thumbnail.filepath, filePath); // Save the file with the original name
   return filePath;
 }

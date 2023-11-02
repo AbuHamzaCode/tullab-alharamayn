@@ -4,7 +4,8 @@ const models = require('../models');
 const logger = require('../log.config');
 const multer = require('multer');
 const fs = require("fs");
-const { mergeChunks } = require('../utils/helpers');
+const { mergeChunks, formDataHandler } = require('../utils/helpers');
+const { authenticateJWT, isTokenExpired } = require('../middleware/token.middleware');
 
 const upload = multer({
   storage: multer.memoryStorage(), // You can change the storage as needed
@@ -56,15 +57,19 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST a new lesson
-router.post('/', async (req, res) => {
+router.post('/create', authenticateJWT, isTokenExpired, formDataHandler, async (req, res) => {
   try {
+    const newUser = req.body;
+    delete newUser.password;
+    const createdUser = await models.User.create(newUser);
+    res.status(201).json(createdUser);
     //add needed logic
   } catch (error) {
     //add needed error catching logic
   }
 });
 
-router.post("/file-upload", upload.single("file"), async (req, res) => {
+router.post("/file-upload", authenticateJWT, isTokenExpired, upload.single("file"), async (req, res) => {
   const chunk = req.file.buffer;
   const chunkNumber = Number(req.body.chunkNumber);
   const totalChunks = Number(req.body.totalChunks);
@@ -84,11 +89,13 @@ router.post("/file-upload", upload.single("file"), async (req, res) => {
 
     if (chunkNumber === totalChunks - 1) {
       // If this is the last chunk, merge all chunks into a single file
-      await mergeChunks(fileName, totalChunks);
-      console.log("File merged successfully");
+      let mergedFileURL = await mergeChunks(fileName, totalChunks);
+      console.log("mergedFileURL", mergedFileURL);
+      res.status(201).json({ message: "File merged successfully", filePath: mergedFileURL });
+    } else {
+      res.status(200).json({ message: "Chunk uploaded successfully" });
     }
 
-    res.status(200).json({ message: "Chunk uploaded successfully" });
   } catch (error) {
     console.error("Error saving chunk:", error);
     res.status(500).json({ error: "Error saving chunk" });

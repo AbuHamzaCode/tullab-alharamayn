@@ -1,4 +1,4 @@
-const { sequelize, User, Role, Playlist, Lesson, Author, AuthorLesson } = require('./models');
+const { sequelize, User, Role, Playlist, Lesson, Author, AuthorLesson, Tag } = require('./models');
 const bcrypt = require('bcrypt');
 
 (async () => {
@@ -18,8 +18,11 @@ const bcrypt = require('bcrypt');
             { fullName: "Abu Amina", email: "abuamina@gmail.com", password: hashedPassword, username: 'abuamina' }
         ]);
 
-        await abuHamza.addRole(adminRole);
-        await abuAmina.addRole(userRole);
+        // Create demo authors
+        const [tag1, tag2, tag3] = await Tag.bulkCreate([
+            { name: 'Akyda' },
+            { name: 'Fikh' }, { name: 'Usul' }
+        ]);
 
         // Create demo playlists
         const playlist1 = await Playlist.create({
@@ -37,19 +40,16 @@ const bcrypt = require('bcrypt');
         const lesson1 = await Lesson.create({
             title: "Test Lesson 1",
             description: "description for test lesson-> here you can write about lesson 1 ",
-            tags: "#test, #tauhid, #osnova",
             playlistId: playlist1.id
         });
         const lesson2 = await Lesson.create({
             title: "Test Lesson 2",
             description: "description for test lesson-> here you can write about lesson 2",
-            tags: "#test, #tauhid, #osnova",
             playlistId: playlist1.id
         });
         const lesson3 = await Lesson.create({
             title: "Test Lesson 3",
             description: "description for test lesson-> here you can write about lesson 3",
-            tags: "#osnova",
             playlistId: playlist2.id
         });
 
@@ -58,19 +58,37 @@ const bcrypt = require('bcrypt');
             fullName: 'Abu Amina At Tivaki',
             email: "abuaminaattivaki@gmail.com",
             diploma: "Medina University",
-            tags: "#akida, #fikh",
         });
         const author2 = await Author.create({
             fullName: "AbdulMumin",
             email: "abdulmumin@gmail.com",
             diploma: "Medina University",
-            tags: "#akida, #fikh",
         });
 
-        // Associate lessons with authors
+
+        // Associate users with role
+        await abuHamza.addRole(adminRole);
+        await abuAmina.addRole(userRole);
+
+        // Associate users with role
+        await playlist1.addTags([tag1, tag3]);
+        await playlist2.addTags([tag2]);
+
+        // Associate authors with tags
+        await author1.addTags([tag1, tag2]);
+        await author2.addTags([tag3]);
+
+        // Associate lessons with authors & tags
         await lesson1.addAuthors([author1, author2]);
+        await lesson1.addTags([tag1, tag3]);
+
         await lesson2.addAuthors([author2]);
+        await lesson2.addTags([tag1, tag2]);
+
         await lesson3.addAuthors([author1]);
+        await lesson3.addTags([tag2]);
+
+
 
         console.log('Demo data and relationships have been inserted.');
 

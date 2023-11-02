@@ -2,5 +2,7 @@ node_modules/
 package-lock.json
 error.log
 .env
-thumbnails/
-audios/
+
+chunks/
+uploaded_audios/
+uploaded_thumbnails/

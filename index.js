@@ -8,6 +8,7 @@ const app = express();
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json())
+app.use('/uploaded_audios', express.static('uploaded_audios'));
 
 const port = process.env.APP_PORT;
 
